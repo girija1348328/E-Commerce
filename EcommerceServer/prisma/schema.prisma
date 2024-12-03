@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,9 +8,83 @@ datasource db {
 }
 
 model User {
-  id       Int @id @default(autoincrement())
-  name     String
-  email    String @unique
-  password String
-  address  String
+  id         Int      @id @default(autoincrement())
+  name       String
+  role       String   @default("user")
+  email      String   @unique
+  password   String
+  address    String
+  createdAt  DateTime @default(now())
+  Wishlist   Wishlist[]
+  Cart       Cart[]
+  Checkout   Checkout[]
+  Transactions Transactions[]
+}
+
+model Categories {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String
+  createdAt   DateTime @default(now())
+  isDefault   Boolean  @default(false) // Add this field to track the default category
+  Inventory   Inventory[]
+}
+
+model Inventory {
+  id          Int      @id @default(autoincrement())
+  productName String
+  rating      String
+  price       String
+  description String
+  size        String
+  categoryId  Int      @map("category_id")
+  isAvailable Boolean
+  createdAt   DateTime @default(now())
+  category    Categories @relation(fields: [categoryId], references: [id])
+}
+
+model Wishlist {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  productList String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Cart {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @map("user_id")
+  productList String
+  quantity   Int
+  createdAt  DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model Checkout {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  name           String
+  companyName    String
+  address        String
+  apartment      String
+  town           String
+  phoneNumber    String
+  email          String
+  deliveryOptions String
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id])
+  Transactions   Transactions[]
+}
+
+model Transactions {
+  id             Int      @id @default(autoincrement())
+  userId         Int      @map("user_id")
+  checkoutId     Int      @map("checkout_id")
+  totalAmount    String
+  paymentMethod  String
+  paymentStatus  String
+  transactionDate DateTime @default(now())
+  user           User       @relation(fields: [userId], references: [id])
+  checkout       Checkout   @relation(fields: [checkoutId], references: [id])
 }
