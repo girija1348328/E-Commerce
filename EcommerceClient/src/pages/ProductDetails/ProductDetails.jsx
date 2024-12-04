@@ -27,7 +27,7 @@ const ProductDetails = () => {
         </Link>,
         <Typography key="3" sx={{ color: 'text.primary' }}>
             Breadcrumb
-        </Typography>,
+        </Typography>
     ];
 
 
@@ -428,7 +428,7 @@ const ProductDetails = () => {
                                         height: '40px',
                                         backgroundColor: '#DB4444',
                                         borderRadius: '2px',
-                                        
+
                                     }}
                                 />
                                 <Typography variant="h6" component="h6" color="var(--Secondary-2, #DB4444)" fontSize="20px">This Month</Typography>
@@ -444,7 +444,7 @@ const ProductDetails = () => {
 
 
                                 <Box>
-                                    <Button 
+                                    <Button
                                         width='234px'
                                         height='56px'
                                         background='#DB4444'

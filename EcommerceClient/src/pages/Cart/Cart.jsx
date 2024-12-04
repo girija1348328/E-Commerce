@@ -184,6 +184,12 @@ const Cart = () => {
                         >
                             Total
                         </Typography>
+
+                        <Button
+                            sx={{ color: "white", background: '#DB4444', height: '55px' }}
+                        >
+                            Proceed to checkout
+                        </Button>
                     </Box>
                 </Box>
 
