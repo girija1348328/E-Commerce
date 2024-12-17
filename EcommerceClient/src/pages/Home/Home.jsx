@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Typography from '@mui/material/Typography';
 import { Container, Box } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -8,12 +9,23 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import StarIcon from '@mui/icons-material/Star';
 import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
+import { useDispatch, useSelector } from 'react-redux';
+import { getCategories } from '../../features/categories/categorySlice';
 
 const Home = () => {
-    // Define target time (example: 5 minutes from now)
-    const targetTime = new Date().getTime() + 5 * 60 * 1000;
-
+    const navigate = useNavigate();
+    const targetTime = new Date().getTime() + 5 * 60 * 1000; // Target time (5 minutes from now)
+    const dispatch = useDispatch();
+    const { categories, status, error } = useSelector((state) => state.categories);
     const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(targetTime));
+    const timerRef = useRef(null); // Store the interval ID
+
+    useEffect(() => {
+        // Fetch categories only once when the component mounts
+        if (status === "idle") {
+            dispatch(getCategories());
+        }
+    }, [dispatch, status]);
 
     // Calculate the remaining time
     function calculateTimeLeft(target) {
@@ -29,14 +41,19 @@ const Home = () => {
         return { days: 0, hours: 0, minutes: 0, seconds: 0 };
     }
 
-    // Update the countdown every second
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setTimeLeft(calculateTimeLeft(targetTime));
-        }, 1000);
+    function handleCategories(id) {
+        navigate(`/productList/${id}`);
+    }
 
-        return () => clearInterval(timer); // Cleanup interval on component unmount
-    }, [targetTime]);
+    // useEffect(() => {
+    //     // Set up the timer
+    //     timerRef.current = setInterval(() => {
+    //         setTimeLeft((prev) => calculateTimeLeft(targetTime));
+    //     }, 1000);
+
+    //     // Clean up the interval when the component unmounts
+    //     return () => clearInterval(timerRef.current);
+    // }, [targetTime]);
 
     return (
         <Container maxWidth="lg">
@@ -63,28 +80,24 @@ const Home = () => {
                 <Box
                     sx={{
                         gridArea: 'row1Section1',
-                        display: "flex",
+                        display: 'flex',
                         flexDirection: 'column',
-                        gap: '10px'
+                        gap: '10px',
                     }}
                 >
-                    <Typography variant="h6" component="h6">Woman's fashion</Typography>
+                    {status === 'loading' && <Typography>Loading categories...</Typography>}
+                    {status === 'failed' && <Typography color="error">Error: {error}</Typography>}
 
-                    <Typography variant="h6" component="h6">Men's fashion</Typography>
+                    {categories.data && categories.data.length > 0 &&
+                        categories.data.map((category, index) => (
+                            <Typography key={index} variant="h6" component="h6" onClick={() => handleCategories(category.id)}>
+                                {category.name}
+                            </Typography>
+                        ))}
 
-                    <Typography variant="h6" component="h6">Electronics</Typography>
-
-                    <Typography variant="h6" component="h6">Home & Lifestyle</Typography>
-
-                    <Typography variant="h6" component="h6">Medicine</Typography>
-
-                    <Typography variant="h6" component="h6">Sports & Outdoor</Typography>
-
-                    <Typography variant="h6" component="h6">Baby’s & Toys</Typography>
-
-                    <Typography variant="h6" component="h6">Groceries & Pets</Typography>
-
-
+                    {categories.data && categories.data.length === 0 && status === 'succeeded' && (
+                        <Typography>No categories available.</Typography>
+                    )}
                 </Box>
 
                 <Box

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Box, Stack, Breadcrumbs, Typography, Link, Divider, Rating, Button, TextField, FormControlLabel, RadioGroup, FormLabel, FormControl, Radio } from '@mui/material';
+import { useParams } from 'react-router-dom';
+import { getCart } from '../../features/cart/cartSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import {createCheckout} from '../../features/checkout/checkout'
+import Swal from 'sweetalert2';
+import { useNavigate } from 'react-router-dom';
 
 
 function handleClick(event) {
@@ -8,6 +14,65 @@ function handleClick(event) {
 }
 
 const Checkout = () => {
+    const { cartId } = useParams()
+    const dispatch = useDispatch()
+    const userId = localStorage.getItem("userId")
+    console.log(userId, "Here is the userid..!")
+    const [cartData, setCartData] = useState([]);
+    const [totalValue, setTotalValue] = useState(0);
+    const [totalValueWithShipping, setTotalValueWithSh] = useState(0);
+    const [deliveryOption, setDeliveryOption] = useState('cashOnDelivery');
+    const navigate = useNavigate();
+    const [address, setAddress] = useState({
+        "userId": userId,
+        "name": "",
+        "companyName": "",
+        "address": "",
+        "apartment": "",
+        "town": "",
+        "phoneNumber": "",
+        "email": "",
+        "deliveryOptions": deliveryOption
+
+    });
+    const handleDeliveryOptionChange = (event) => {
+        setDeliveryOption(event.target.value);
+    };
+
+    const handlePlaceOrder = async () => {
+        const res = await dispatch(createCheckout(address));
+        if (res?.payload?.status === true) {
+            // Show SweetAlert if the order is successfully placed
+            Swal.fire({
+                title: 'Success!',
+                text: 'Your order has been placed.',
+                icon: 'success',
+                confirmButtonText: 'OK',
+            });
+            setTimeout(()=>{
+                navigate('/')
+            },3000)
+            
+        } else {
+            // Handle failure (optional)
+            Swal.fire({
+                title: 'Error!',
+                text: 'There was an issue placing your order. Please try again.',
+                icon: 'error',
+                confirmButtonText: 'Retry',
+            });
+        }
+    };
+
+    useEffect(() => {
+        const total = cartData.reduce((acc, row) => {
+            return acc + row?.product?.price * row?.quantity;
+        }, 0);
+        setTotalValue(total);
+        setTotalValueWithSh(total + 50)
+    }, [cartData, dispatch]);
+
+
     const breadcrumbs = [
         <Link underline="hover" key="1" color="inherit" href="/" onClick={handleClick}>
             MUI
@@ -25,6 +90,23 @@ const Checkout = () => {
             Breadcrumb
         </Typography>
     ];
+
+    const handleCart = async () => {
+        const res = await dispatch(getCart(userId))
+        setCartData(res?.payload?.data)
+    }
+    useEffect(() => {
+        handleCart()
+    }, [])
+
+    const handleAddressChange = (e) => {
+        const { id, value } = e.target;
+        setAddress((prevData) => ({
+            ...prevData,
+            [id]: value
+        }))
+
+    }
 
     return (
         <Container
@@ -79,49 +161,49 @@ const Checkout = () => {
                         <Box>
                             <Stack direction="column" gap="8px">
                                 <Typography>First Name*</Typography>
-                                <TextField fullWidth label="Enter First Name" id="enterFirstName" />
+                                <TextField fullWidth label="Enter First Name" value={address.name} onChange={handleAddressChange} id="name" />
                             </Stack>
                         </Box>
 
                         <Box>
                             <Stack direction="column" gap="8px">
                                 <Typography>Company Name</Typography>
-                                <TextField fullWidth label="Enter Company Name" id="enterCompanyName" />
+                                <TextField fullWidth label="Enter Company Name" onChange={handleAddressChange} id="companyName" />
                             </Stack>
                         </Box>
 
                         <Box>
                             <Stack direction="column" gap="8px">
                                 <Typography>Street Address</Typography>
-                                <TextField fullWidth label="Enter Street" id="enterStreetName" />
+                                <TextField fullWidth label="Enter Street" onChange={handleAddressChange} id="address" />
                             </Stack>
                         </Box>
 
                         <Box>
                             <Stack direction="column" gap="8px">
                                 <Typography>Apartment, Floor, etc.</Typography>
-                                <TextField fullWidth label="Enter Apartment" id="enterApartmentName" />
+                                <TextField fullWidth label="Enter Apartment" onChange={handleAddressChange} id="apartment" />
                             </Stack>
                         </Box>
 
                         <Box>
                             <Stack direction="column" gap="8px">
                                 <Typography>Town/City</Typography>
-                                <TextField fullWidth label="Enter Town Name" id="enterTownName" />
+                                <TextField fullWidth label="Enter Town Name" onChange={handleAddressChange} id="town" />
                             </Stack>
                         </Box>
 
                         <Box>
                             <Stack direction="column" gap="8px">
                                 <Typography>Phone Number*</Typography>
-                                <TextField fullWidth label="Enter Phone Number" id="enterPhoneNumber" />
+                                <TextField fullWidth label="Enter Phone Number" onChange={handleAddressChange} id="phoneNumber" />
                             </Stack>
                         </Box>
 
                         <Box>
                             <Stack direction="column" gap="8px">
                                 <Typography>Email Address*</Typography>
-                                <TextField fullWidth label="Enter Email Address" id="enterEmailAddress" />
+                                <TextField fullWidth label="Enter Email Address" onChange={handleAddressChange} id="email" />
                             </Stack>
                         </Box>
                     </Stack>
@@ -141,23 +223,26 @@ const Checkout = () => {
                             borderRadius: '8px',
                         }}
                     >
-                        <Stack
-                            display="flex"
-                            flexDirection="row"
-                            justifyContent="space-between"
-                        >
-                            <Typography>LCD Monitor</Typography>
-                            <Typography>650</Typography>
-                        </Stack>
+                        {cartData && cartData.map((data) => (
+                            <Stack
+                                display="flex"
+                                flexDirection="row"
+                                justifyContent="space-between"
+                            >
+                                <Typography>{data?.product?.productName}</Typography>
+                                <Typography>{data?.product?.price * data?.quantity}</Typography>
+                            </Stack>
+                        ))}
 
-                        <Stack
+
+                        {/* <Stack
                             display="flex"
                             flexDirection="row"
                             justifyContent="space-between"
                         >
                             <Typography>LCD Monitor</Typography>
                             <Typography>650</Typography>
-                        </Stack>
+                        </Stack> */}
 
                         <Stack
                             display="flex"
@@ -165,7 +250,7 @@ const Checkout = () => {
                             justifyContent="space-between"
                         >
                             <Typography>Subtotal</Typography>
-                            <Typography>1250</Typography>
+                            <Typography>{totalValue}</Typography>
                         </Stack>
                         <Divider />
                         <Stack
@@ -174,7 +259,7 @@ const Checkout = () => {
                             justifyContent="space-between"
                         >
                             <Typography>Shipping</Typography>
-                            <Typography>650</Typography>
+                            <Typography>50</Typography>
                         </Stack>
                         <Divider />
 
@@ -184,14 +269,15 @@ const Checkout = () => {
                             justifyContent="space-between"
                         >
                             <Typography>Total</Typography>
-                            <Typography>650</Typography>
+                            <Typography>{totalValue + 50}</Typography>
                         </Stack>
 
                         <FormControl>
                             <FormLabel id="demo-radio-buttons-group-label">Choose Delivery Option</FormLabel>
                             <RadioGroup
                                 aria-labelledby="demo-radio-buttons-group-label"
-                                defaultValue="female"
+                                value={deliveryOption}  // Bind value to the state
+                                onChange={handleDeliveryOptionChange}  // Update state on change
                                 name="radio-buttons-group"
                             >
                                 <FormControlLabel value="Bank" control={<Radio />} label="Bank" />
@@ -206,6 +292,7 @@ const Checkout = () => {
                                 height: '55px',
                                 borderRadius: '8px',
                             }}
+                            onClick={handlePlaceOrder}
                         >
                             Place Order
                         </Button>

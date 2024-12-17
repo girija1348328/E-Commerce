@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Container,
     Box,
@@ -17,6 +17,9 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { getCart } from '../../features/cart/cartSlice'
 
 function handleClick(event) {
     event.preventDefault();
@@ -36,6 +39,32 @@ const rows = [
 ];
 
 const Cart = () => {
+    const dispatch = useDispatch()
+    const { cartId, userId } = useParams()
+    const [cartData, setCartData] = useState([])
+    const [totalValue, setTotalValue] = useState(0);
+    const navigate = useNavigate()
+
+    const handleCart = async () => {
+        const res = await dispatch(getCart(userId))
+        setCartData(res?.payload?.data)
+    }
+    useEffect(() => {
+        handleCart()
+    }, [])
+
+    useEffect(() => {
+        const total = cartData.reduce((acc, row) => {
+            return acc + row?.product?.price * row?.quantity;
+        }, 0);
+        setTotalValue(total);
+        
+    }, [cartData,dispatch]);
+
+    const handleProcced = () =>{
+        navigate(`/checkout/${cartId}/${userId}`)
+    }
+
     const breadcrumbs = [
         <Link underline="hover" key="1" color="inherit" href="/" onClick={handleClick}>
             MUI
@@ -93,17 +122,17 @@ const Cart = () => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {rows.map((row) => (
+                                {cartData.map((row) => (
                                     <TableRow
-                                        key={row.Product}
+                                        key={row.id}
                                         sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                                     >
                                         <TableCell component="th" scope="row">
-                                            {row.Product}
+                                            {row?.product?.productName}
                                         </TableCell>
-                                        <TableCell align="right">{row.Price}</TableCell>
-                                        <TableCell align="right">{row.Quantity}</TableCell>
-                                        <TableCell align="right">{row.Subtotal}</TableCell>
+                                        <TableCell align="right">{row?.product?.price}</TableCell>
+                                        <TableCell align="right">{row?.quantity}</TableCell>
+                                        <TableCell align="right">{row?.product?.price * row?.quantity}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -160,35 +189,41 @@ const Cart = () => {
                     </Box>
 
                     <Box
-                        sx={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '470px', height: '324px' }}
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '10px',
+                            width: '470px',
+                            height: '324px',
+                            padding: '20px',
+                            border: '1px solid #ddd',
+                            borderRadius: '8px',
+                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                        }}
                     >
-                        <Typography
-                            sx={{ fontSize: "20px" }}
-                        >
+                        <Typography sx={{ fontSize: '20px', fontWeight: 'bold' }}>
                             Cart Total
                         </Typography>
-                        <Typography
-                            sx={{ fontSize: "16px" }}
-                        >
-                            Sub Total
+                        <Typography sx={{ fontSize: '16px' }}>
+                            Sub Total: ${totalValue}
                         </Typography>
                         <Divider />
-                        <Typography
-                            sx={{ fontSize: "16px" }}
-                        >
-                            Shipping
-                        </Typography>
+                        <Typography sx={{ fontSize: '16px' }}>Shipping: Free</Typography>
                         <Divider />
-                        <Typography
-                            sx={{ fontSize: "16px" }}
-                        >
-                            Total
+                        <Typography sx={{ fontSize: '16px', fontWeight: 'bold' }}>
+                            Total: ${totalValue}
                         </Typography>
 
                         <Button
-                            sx={{ color: "white", background: '#DB4444', height: '55px' }}
+                            sx={{
+                                color: 'white',
+                                background: '#DB4444',
+                                height: '55px',
+                                '&:hover': { background: '#B33B3B' },
+                            }}
+                            onClick={handleProcced}
                         >
-                            Proceed to checkout
+                            Proceed to Checkout
                         </Button>
                     </Box>
                 </Box>

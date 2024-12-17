@@ -1,8 +1,38 @@
-import { React } from 'react';
-import { Link } from 'react-router-dom';
+import { React, useState } from 'react';
+import { Link,useNavigate} from 'react-router-dom';
 import { Container, Box, Typography, TextField, Button } from '@mui/material';
-
+import { useDispatch } from 'react-redux';
+import {createLogin} from '../../features/logIn/loginSlice';
 const Login = () => {
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
+    let [formLogin, setFormLogin] = useState({
+        email: "",
+        password: ""
+    });
+
+const handleLogin = async () => {
+  try {
+    const result = await dispatch(createLogin(formLogin)).unwrap(); 
+    
+    if(result.status == true){
+      localStorage.setItem("userId",result.data.id)
+       navigate('/')
+    }   
+    
+    } catch (error) {
+    console.error('Login failed:', error); // Handle error
+  }
+};
+
+    const handleLoginFormChange = (e) => {
+        const { id, value } = e.target;
+        setFormLogin((prevData) => ({
+            ...prevData,
+            [id]: value
+        }))
+    }
+
     return (
         <Container maxWidth="lg">
             <Box
@@ -75,8 +105,8 @@ const Login = () => {
                     >
                         Enter your details below
                     </Typography>
-                    <TextField id="standard-basic" label="Email Or Phonenumber" variant="standard" />
-                    <TextField id="standard-basic" label="Password" variant="standard" />
+                    <TextField id="email" label="Email Or Phonenumber" variant="standard" value={formLogin.email} onChange={handleLoginFormChange} />
+                    <TextField id="password" label="Password" variant="standard" value={formLogin.password} onChange={handleLoginFormChange} />
                     <Box
                         display='flex'
                         flexDirection='row'
@@ -94,6 +124,7 @@ const Login = () => {
                                 padding: '10px 20px',
                                 textAlign: 'center'
                             }}
+                            onClick={handleLogin}
                         >
                             LOGIN
                         </Button>

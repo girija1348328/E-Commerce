@@ -1,8 +1,49 @@
-import {React} from 'react';
-import {Link} from 'react-router-dom';
+import { React, useEffect,useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Container, Box, Typography, TextField, Button } from '@mui/material';
+import { SignUp } from '../../features/signUp/signUpSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import Swal from 'sweetalert2';
+const SignUpPage = () => {
+    const [formData, setFormData] = useState(
+        {
+            name: "",
+            email: "",
+            password: "",
+            address: ""
+        }
+    )
+    const dispatch = useDispatch()
 
-const SignUp = () => {
+    const handleSignUp = async () => {
+        const dataRes = await dispatch(SignUp(formData));
+        if (dataRes.payload.status === true) {
+          Swal.fire({
+            title: 'Sign-Up Successful!',
+            text: 'Your account has been created successfully.',
+            icon: 'success',
+            confirmButtonText: 'Continue',
+            confirmButtonColor: '#3085d6',
+          });
+        } else {
+          Swal.fire({
+            title: 'Sign-Up Failed!',
+            text: dataRes.data.message || 'Something went wrong. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'Retry',
+            confirmButtonColor: '#d33',
+          });
+        }
+      };
+      
+
+    const handleChange = (e) => {
+        const { id, value } = e.target;
+        setFormData((prevData)=>({
+            ...prevData,
+            [id] : value
+        }))
+    }
     return (
         <Container maxWidth="lg">
             <Box
@@ -76,16 +117,18 @@ const SignUp = () => {
                         Enter your details below
                     </Typography>
 
-                    <TextField id="standard-basic" label="Name" variant="standard" />
-                    <TextField id="standard-basic" label="Email Or Phonenumber" variant="standard" />
-                    <TextField id="standard-basic" label="Password" variant="standard" />
+                    <TextField id="name" label="Name" variant="standard" onChange={handleChange} />
+                    <TextField id="email" label="Email Or Phonenumber" variant="standard" onChange={handleChange} />
+                    <TextField id="password" type="password" label="Password" variant="standard" onChange={handleChange} />
+                    <TextField id="address" label="address" variant="standard" onChange={handleChange} />
                     <Button
                         sx={{
                             background: 'var(--Button2, #DB4444)',
                             borderRadius: '4px',
-                            color:'white',
-                            marginTop:'20px'
+                            color: 'white',
+                            marginTop: '20px'
                         }}
+                        onClick={handleSignUp}
                     >
                         Create Account
                     </Button>
@@ -94,8 +137,8 @@ const SignUp = () => {
                         sx={{
                             background: 'white',
                             borderRadius: '4px',
-                            color:'black',
-                            marginTop:'10px'
+                            color: 'black',
+                            marginTop: '10px'
                         }}
                     >
                         Sign Up With Google
@@ -103,9 +146,9 @@ const SignUp = () => {
 
                     <Typography
                         sx={{
-                            display:'flex',
-                            alignItems:'center',
-                            justifyContent:'center'
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
                         }}
                     >
                         Already have an account? <Link to="/login">Login</Link>
@@ -116,4 +159,4 @@ const SignUp = () => {
     );
 };
 
-export default SignUp;
+export default SignUpPage;

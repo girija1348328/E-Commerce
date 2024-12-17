@@ -4,6 +4,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder'
 import StarIcon from '@mui/icons-material/Star';
+import { getProductById } from "../../features/products/productSlice";
+import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from "react-redux";
+import { createCart } from "../../features/cart/cartSlice";
 
 
 function handleClick(event) {
@@ -12,6 +16,16 @@ function handleClick(event) {
 }
 
 const ProductDetails = () => {
+    const dispatch = useDispatch();
+    const storeUserId = localStorage.getItem('userId');
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [cartData, setCartData] = useState({
+        quantity: "",
+        userId: "",
+        productId: ""
+    });
+    const { selectedProduct, status, error } = useSelector((state) => state.products);
     const breadcrumbs = [
         <Link underline="hover" key="1" color="inherit" href="/" onClick={handleClick}>
             MUI
@@ -29,6 +43,28 @@ const ProductDetails = () => {
             Breadcrumb
         </Typography>
     ];
+
+    const handleCartData = async () => {
+        console.log("buy now clicked..")
+        setCartData((prevData) => ({
+            ...prevData,
+            userId: storeUserId,
+            productId: id,
+            quantity: "1",
+        }))
+
+       const res =  await dispatch(createCart(cartData)).unwrap();
+       const cartId = res.data.id
+       if(res.status == true){
+            navigate(`/cart/${cartId}/${storeUserId}`)
+        }
+    }
+
+    useEffect(() => {
+        if (id) {
+            dispatch(getProductById(id))
+        }
+    }, [dispatch, id]);
 
 
     return (
@@ -127,11 +163,13 @@ const ProductDetails = () => {
                     </Stack>
 
                     {/* itemdetails section */}
+                    {/* {Array.isArray(selectedProduct?.data) && */}
+                    {/* selectedProduct.data.map((item, index) => ( */}
                     <Stack spacing={1.5}>
                         <Stack>
                             <Box>
                                 <Typography>
-                                    <h2>Havic HV G-92 Gamepad</h2>
+                                    <h2>{selectedProduct?.data?.productName}</h2>
                                 </Typography>
                             </Box>
                         </Stack>
@@ -161,7 +199,11 @@ const ProductDetails = () => {
                                     color="var(--Button1, #0F6)"
                                     fontSize="14px"
 
-                                >In Stock</Typography>
+                                >
+                                    {
+                                        selectedProduct?.data?.isAvailable ? "In Stock" : "Out Of Stock"
+                                    }
+                                </Typography>
                             </Box>
                         </Stack>
 
@@ -171,7 +213,7 @@ const ProductDetails = () => {
                                     fontSize="24px"
 
                                 >
-                                    $192.00
+                                    {selectedProduct?.data?.price}
                                 </Typography>
                             </Box>
                         </Stack>
@@ -180,7 +222,7 @@ const ProductDetails = () => {
                                 <Typography
                                     width="373px"
                                 >
-                                    PlayStation 5 Controller Skin High quality vinyl with air channel adhesive for easy bubble free install & mess free removal Pressure sensitive.
+                                    {selectedProduct?.data?.description}
                                 </Typography>
                             </Box>
                         </Stack>
@@ -225,7 +267,6 @@ const ProductDetails = () => {
                                 spacing={1}
                             >
                                 <Button
-
                                     display="flex"
                                     width="32px"
                                     height="32px"
@@ -235,61 +276,7 @@ const ProductDetails = () => {
                                     color="var(--Text2, #000)"
                                     fontSize="14px"
                                 >
-                                    XS
-                                </Button>
-
-                                <Button
-
-                                    display="flex"
-                                    width="32px"
-                                    height="32px"
-                                    padding="6px"
-                                    justifyContent="center"
-                                    alignItems="center"
-                                    color="var(--Text2, #000)"
-                                    fontSize="14px"
-                                >
-                                    S
-                                </Button>
-
-                                <Button
-
-                                    display="flex"
-                                    width="32px"
-                                    height="32px"
-                                    padding="6px"
-                                    justifyContent="center"
-                                    alignItems="center"
-                                    color="var(--Text2, #000)"
-                                    fontSize="14px"
-                                >
-                                    M
-                                </Button>
-                                <Button
-
-                                    display="flex"
-                                    width="32px"
-                                    height="32px"
-                                    padding="6px"
-                                    justifyContent="center"
-                                    alignItems="center"
-                                    color="var(--Text2, #000)"
-                                    fontSize="14px"
-                                >
-                                    L
-                                </Button>
-                                <Button
-
-                                    display="flex"
-                                    width="32px"
-                                    height="32px"
-                                    padding="6px"
-                                    justifyContent="center"
-                                    alignItems="center"
-                                    color="var(--Text2, #000)"
-                                    fontSize="14px"
-                                >
-                                    XL
+                                    {selectedProduct?.data?._size}
                                 </Button>
                             </Box>
                         </Stack>
@@ -372,6 +359,7 @@ const ProductDetails = () => {
                                         width: "105px",
                                         height: "43px"
                                     }}
+                                    onClick={handleCartData}
                                 >
                                     Buy Now
                                 </Button>
@@ -394,6 +382,8 @@ const ProductDetails = () => {
                         </Stack>
 
                     </Stack>
+                    {/* ))} */}
+
 
                 </Stack>
 
